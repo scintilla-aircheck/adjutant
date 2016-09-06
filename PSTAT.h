@@ -28,5 +28,5 @@ public:
 private:
 	byte Address_[3];
 	MCP3425 ADC_;
-	LMP91000 PSTAT_;
+	//LMP91000 PSTAT_;
 };
