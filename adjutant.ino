@@ -63,5 +63,31 @@ void setup ()
 
 void loop ()
 {
+	dust.Awake(true);
 
+	delay(5 * 1000);
+
+	dust.Query();
+
+	delay(1000);
+
+	if (dust.Update())
+	{
+		Serial.print("PM 2.5: ");
+		Serial.println(dust.PM2_5(), 1);
+
+		Serial.print("PM 10: ");
+		Serial.println(dust.PM10(), 1);
+	}
+
+	delay(1000);
+
+	dust.Awake(false);
+
+	Serial.print("VOUT: ");
+	Serial.println(gas.ADC(), 4);
+
+	delay(5 * 1000);
+
+	Serial.println("- - - - - - - - - -");
 }
