@@ -5,7 +5,7 @@ Author:     Konrad R.K. Ludwig
 
 #include <Wire.h>
 
-#include <SDS021.h>
+#include <SDS021/SDS021.h>
 
 #include "SPEC.h"
 #include "PSTAT.h"

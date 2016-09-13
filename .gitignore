@@ -40,3 +40,6 @@
 # Visual Micro
 __vm/
 Debug/
+
+# PyCharm
+.idea/

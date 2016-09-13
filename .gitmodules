@@ -1,0 +1,9 @@
+[submodule "SDS021"]
+	path = SDS021
+	url = https://github.com/scintilla-aircheck/SDS021
+[submodule "LMP91000"]
+	path = LMP91000
+	url = https://github.com/scintilla-aircheck/LMP91000
+[submodule "MCP3425"]
+	path = MCP3425
+	url = https://github.com/scintilla-aircheck/MCP3425
