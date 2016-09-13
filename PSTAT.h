@@ -2,8 +2,8 @@
 
 #include <Arduino.h>
 
-#include <LMP91000/LMP91000.h>
-#include <MCP3425/MCP3425.h>
+#include <LMP91000.h>
+#include <MCP3425.h>
 
 class PSTAT : public LMP91000
 {

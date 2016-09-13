@@ -1,12 +1,12 @@
-[submodule "SDS021"]
-	path = SDS021
-	url = https://github.com/scintilla-aircheck/SDS021
-[submodule "LMP91000"]
-	path = LMP91000
-	url = https://github.com/scintilla-aircheck/LMP91000
-[submodule "MCP3425"]
-	path = MCP3425
-	url = https://github.com/scintilla-aircheck/MCP3425
 [submodule "scintilla-arduino-ota"]
 	path = scintilla-arduino-ota
 	url = https://github.com/scintilla-aircheck/scintilla-arduino-ota
+[submodule "libraries/SDS021"]
+	path = libraries/SDS021
+	url = https://github.com/scintilla-aircheck/SDS021
+[submodule "libraries/MCP3425"]
+	path = libraries/MCP3425
+	url = https://github.com/scintilla-aircheck/MCP3425
+[submodule "libraries/LMP91000"]
+	path = libraries/LMP91000
+	url = https://github.com/scintilla-aircheck/LMP91000
