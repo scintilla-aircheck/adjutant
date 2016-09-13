@@ -7,3 +7,6 @@
 [submodule "MCP3425"]
 	path = MCP3425
 	url = https://github.com/scintilla-aircheck/MCP3425
+[submodule "scintilla-arduino-ota"]
+	path = scintilla-arduino-ota
+	url = https://github.com/scintilla-aircheck/scintilla-arduino-ota

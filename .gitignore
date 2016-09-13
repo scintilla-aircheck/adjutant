@@ -43,3 +43,6 @@ Debug/
 
 # PyCharm
 .idea/
+
+# build
+build.nodemcu/
