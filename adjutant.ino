@@ -4,9 +4,9 @@ Author:     Konrad R.K. Ludwig
 */
 
 #include <Wire.h>
-#include <SoftwareSerial.h>
 
-#include <SDS021.h>
+#include "libraries/SDS021/SDS021.h"
+#include "libraries/MCP3425/MCP3425.h"
 
 #include "SPEC.h"
 #include "PSTAT.h"

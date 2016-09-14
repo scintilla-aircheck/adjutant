@@ -1,6 +1,6 @@
 #pragma once
 
-#include <LMP91000.h>
+#include "libraries/LMP91000/LMP91000.h"
 
 namespace SPEC
 {
