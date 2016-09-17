@@ -10,3 +10,6 @@
 [submodule "libraries/LMP91000"]
 	path = libraries/LMP91000
 	url = https://github.com/scintilla-aircheck/LMP91000
+[submodule "libraries/nanopb"]
+	path = libraries/nanopb
+	url = https://github.com/nanopb/nanopb.git

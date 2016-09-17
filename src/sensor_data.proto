@@ -1,0 +1,9 @@
+// Message protocol for sending the Scintilla packet of sensor data
+// v0
+
+syntax = "proto2";
+
+message SensorDataMessage {
+    required int32 lucky_number = 1;
+}
+

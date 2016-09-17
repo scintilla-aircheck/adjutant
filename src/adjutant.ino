@@ -4,13 +4,19 @@ Author:     Konrad R.K. Ludwig
 */
 
 #include <Wire.h>
-#include "FS.h"
 
 #include "SDS021.h"
 #include "MCP3425.h"
+#include "pb_common.h"
+#include "pb_encode.h"
+#include "pb_decode.h"
+#include "pb.h"
+#include "sensor_data.pb.h"
 
 #include "SPEC.h"
 #include "PSTAT.h"
+#include "OTA.h"
+#include "data.h"
 
 // I2C pins
 #define I2CSDA_PIN 2
@@ -31,18 +37,25 @@ SDS021 dust = SDS021(SSRX_PIN, SSTX_PIN);
 PSTAT gas = PSTAT(PSTAT0_PIN, PSTAT1_PIN, PSTAT2_PIN, MENB_PIN);
 //Components::SKM61 gps = SKM61(SSRX_PIN, SSTX_PIN);
 
+// OTA
+OTA ota = OTA();
+
+// Data
+Data data = Data();
+
 void setup ()
 {
 	// Intialize UART connection
 	Serial.begin(9600);
 	while (!Serial); // Necessary for USB
-	Serial.println("Hardware serial initialized.");
+	delay(1000);
+	Serial.println("Hardware serial initialized.\n");
 
 	// Initialize I2C connection
 	Serial.print("Initializing I2C bus...");
 	Wire.pins(I2CSDA_PIN, I2CSCL_PIN);
 	Wire.begin();
-	Serial.println("Done!");
+	Serial.println("Done!\n");
 
 	// Initialize software serial connection
 	Serial.print("Initializing dust sensor...");
@@ -50,7 +63,7 @@ void setup ()
 	dust.PassiveMode(true);
 	dust.Awake(false);
 	dust.Update();
-	Serial.println("Done!");
+	Serial.println("Done!\n");
 
 	// Initialize SPEC sensors
 	Serial.print("Initializing PSTAT circuit...");
@@ -58,9 +71,24 @@ void setup ()
 	gas.ADC(true, MCP3425::EResolution::d16Bit, MCP3425::EGain::x1);
 	gas.Configure(0, SPEC::CO);
 	//gas.Configure(1, SPEC::O3);
-	Serial.println("Done!");
+	Serial.println("Done!\n");
 
-	Serial.println("- - - - - - - - - -");
+	// Initialize OTA
+	Serial.print("Initializing OTA...");
+	if(ota.Connect("DLab", "endmill1")) {
+	    // Attempt OTA Update
+        Serial.print("\tInitializing OTA Update...");
+        ota.OtaUpdate("192.168.0.1", 1337, "/example.bin");
+        Serial.println("\tDone!");
+	}
+	Serial.println("Done!\n");
+
+	// Test Data Serialization and Deserialization
+	Serial.println("Initializing Data Serialization and Deserialization...");
+	data.Write(23);
+	Serial.println("Done!\n");
+
+	Serial.println("- - - - - - - - - -\n\n");
 }
 
 void loop ()
