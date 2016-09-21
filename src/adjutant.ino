@@ -33,9 +33,9 @@ Author:     Konrad R.K. Ludwig
 #define MENB_PIN 16
 
 // Sensors and components
-SDS021 dust = SDS021(SSRX_PIN, SSTX_PIN);
+SDS021 dust = SDS021();
 PSTAT gas = PSTAT(PSTAT0_PIN, PSTAT1_PIN, PSTAT2_PIN, MENB_PIN);
-//Components::SKM61 gps = SKM61(SSRX_PIN, SSTX_PIN);
+//Components::SKM61 gps = SKM61();
 
 // OTA
 OTA ota = OTA();
