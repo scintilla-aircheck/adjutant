@@ -4,79 +4,183 @@ Data::Data() {}
 
 Data::~Data() {}
 
-bool Data::Serialize(uint8_t *buffer, size_t &message_length, int number) {
+/*
+message ReadingGroupMessage {
+    repeated ReadingMessage readings = 1;
+}
+
+message ReadingMessage {
+    optional int32 sensor = 1;
+    optional double value = 2;
+    optional int64 average_over_seconds = 3;
+    optional double longitude = 4;
+    optional double latitude = 5;
+    optional int32 unit = 6;
+    optional int64 time = 7;
+}
+*/
+
+// Serialize data into a uint8_t buffer representation of ReadingMessage
+bool Data::SerializeReading(uint8_t *buffer, int buffer_length, size_t &message_length, int sensor, double value, int long average_over_seconds, double longitude, double latitude, int unit, int long time) {
+
+    uint8_t _buffer[buffer_length];
+
     bool status;
 
-    SensorDataMessage message = SensorDataMessage_init_zero;
+    ReadingMessage message = ReadingMessage_init_zero;
 
-    pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+    pb_ostream_t stream = pb_ostream_from_buffer(buffer, buffer_length);
+    //pb_ostream_t stream = pb_ostream_from_buffer(_buffer, sizeof(_buffer));
 
-    message.lucky_number = number;
+    Serial.print("buffer_length: ");
+    Serial.println(buffer_length);
+    //Serial.print("sizeof(_buffer): ");
+    //Serial.println(sizeof(_buffer));
 
-    status = pb_encode(&stream, SensorDataMessage_fields, &message);
+
+    message.sensor = sensor;
+    message.value = value;
+    message.average_over_seconds = average_over_seconds;
+    message.longitude = longitude;
+    message.latitude = latitude;
+    message.unit = unit;
+    message.time = time;
+
+    message.has_sensor = true;
+    message.has_value = true;
+    message.has_average_over_seconds = true;
+    message.has_longitude = true;
+    message.has_latitude = true;
+    message.has_unit = true;
+    message.has_time = true;
+
+
+    status = pb_encode(&stream, ReadingMessage_fields, &message);
     message_length = stream.bytes_written;
 
-    if (!status)
-    {
-        Serial.print("Encoding failed: ");
+    if (!status) {
+        Serial.print("SerializeReading:: Encoding failed: ");
         Serial.println(PB_GET_ERROR(&stream));
         return false;
     }
 
+    Serial.print("SerializeReading:: buffer: ");
+    Serial.write(buffer, message_length);
+    Serial.println("");
+    //Serial.print("SerializeReading:: buffer: ");
+    //Serial.write(_buffer, message_length);
+    //Serial.println("");
+    Serial.print("SerializeReading:: Message length: ");
+    Serial.println(message_length);
+
+    //buffer = _buffer;
+
     return true;
 }
 
-bool Data::Deserialize(SensorDataMessage &message, size_t &message_length, uint8_t *buffer) {
+// Deserialize uint8_t buffer representation of ReadingMessage into ReadingMessage
+bool Data::DeserializeReading(ReadingMessage &message, size_t &message_length, uint8_t *buffer) {
+
+    uint8_t _buffer[message_length];
+
     bool status;
 
-    message = SensorDataMessage_init_zero;
+    message = ReadingMessage_init_zero;
 
     /* Create a stream that reads from the buffer. */
     pb_istream_t stream = pb_istream_from_buffer(buffer, message_length);
 
     /* Now we are ready to decode the message. */
-    status = pb_decode(&stream, SensorDataMessage_fields, &message);
+    status = pb_decode(&stream, ReadingMessage_fields, &message);
 
     /* Check for errors... */
-    if (!status)
-    {
+    if (!status) {
         Serial.print("Decoding failed: ");
         Serial.println(PB_GET_ERROR(&stream));
         return false;
     }
 
     /* Print the data contained in the message. */
-    Serial.print("Your lucky number was: ");
-    Serial.println(message.lucky_number);
+    Serial.println("ReadingMessage:");
+    Serial.println(message.sensor);
+    Serial.println(message.value);
+    Serial.println((int)message.average_over_seconds);
+    Serial.println(message.longitude);
+    Serial.println(message.latitude);
+    Serial.println(message.unit);
+    Serial.println((int)message.time);
 
     return true;
 }
 
-bool Data::Write(int number) {
-    uint8_t buffer[128];
-    size_t message_length;
-    SensorDataMessage message;
+bool Data::Read(char *filename, uint8_t *buffer, size_t message_length) {
 
-    Data::Serialize(buffer, message_length, number);
+    String line;
+    File f = SPIFFS.open(filename, "r");
+
+    if (f) {
+        if (f.available()) {
+            //f.readStringUntil('\n').toCharArray(buffer, sizeof(buffer));
+            //buffer = (unsigned char*)f.readStringUntil('\n').c_str();
+            line = f.readStringUntil('\n');
+        }
+        /*
+        while(f.available()) {
+            //Lets read line by line from the file
+            String line = f.readStringUntil('\n');
+            Serial.println(line);
+        }
+        */
+
+        Serial.print("Here's what we read: ");
+        //Serial.println((const char*)buffer);
+        Serial.println(line);
+        //strcpy((char *)buffer, line.c_str());
+        for (int a = 0; a <= message_length; a++) {
+            buffer[a] = line[a];
+        }
+        Serial.write(buffer, message_length);
+        Serial.println("");
+
+        f.close();
+    } else {
+        Serial.println("Tried to open file that doesn't exist.");
+        Serial.print("Named: ");
+        Serial.print(filename);
+
+        return false;
+    }
+
+    return true;
+}
+
+bool Data::Write(char *filename, uint8_t *buffer, size_t message_length) {
+
+    //buffer = (unsigned char*)"hijklmnop";
 
     // always use this to "mount" the filesystem
     bool result = SPIFFS.begin();
-    Serial.println("SPIFFS opened: " + result);
+    Serial.print("SPIFFS opened: ");
+    Serial.println(result);
 
     // this opens the file "f.txt" in read-mode
-    File f = SPIFFS.open("/f.txt", "r");
+    //File f = SPIFFS.open(filename, "r");
 
-    if (!f) {
-        Serial.println("File doesn't exist yet. Creating it");
-
+    //if (!f) {
+        //Serial.println("File doesn't exist yet. Creating it");
+        Serial.println("Opening file in write mode.");
         // open the file in write mode
-        File f = SPIFFS.open("/f.txt", "w");
+        File f = SPIFFS.open(filename, "w");
         if (!f) {
             Serial.println("file creation failed");
         }
-        // now write two lines in key/value style with  end-of-line characters
-        f.println("ssid=abc");
-        f.println("password=123455secret");
+        // now write one line with an end-of-line character
+        f.write(buffer, message_length);
+        f.write('\n');
+        Serial.print("Here's what we wrote: ");
+        Serial.write(buffer, message_length);
+        Serial.println("");
+    /*
     } else {
         // we could open the file
         while(f.available()) {
@@ -85,12 +189,8 @@ bool Data::Write(int number) {
             Serial.println(line);
         }
     }
+    */
     f.close();
-
-    Data::Deserialize(message, message_length, buffer);
-
-    Serial.print("Your lucky number (outside the function) was: ");
-    Serial.println(message.lucky_number);
 
     return true;
 }

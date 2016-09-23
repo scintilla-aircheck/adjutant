@@ -13,3 +13,6 @@
 [submodule "libraries/nanopb"]
 	path = libraries/nanopb
 	url = https://github.com/nanopb/nanopb.git
+[submodule "libraries/scintilla_protobufs"]
+	path = libraries/scintilla_protobufs
+	url = https://github.com/scintilla-aircheck/scintilla-protobufs.git

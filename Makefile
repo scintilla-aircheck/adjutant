@@ -1,5 +1,5 @@
 ARDUINO_VARIANT = nodemcu
-SERIAL_PORT = /dev/ttyUSB1
+SERIAL_PORT = /dev/ttyUSB0
 # uncomment and set the right serial baud according to your sketch (default to 115200)
 #SERIAL_BAUD = 115200
 # uncomment this to use the 1M SPIFFS mapping

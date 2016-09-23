@@ -11,7 +11,7 @@ Author:     Konrad R.K. Ludwig
 #include "pb_encode.h"
 #include "pb_decode.h"
 #include "pb.h"
-#include "sensor_data.pb.h"
+#include "reading.pb.h"
 
 #include "SPEC.h"
 #include "PSTAT.h"
@@ -85,7 +85,19 @@ void setup ()
 
 	// Test Data Serialization and Deserialization
 	Serial.println("Initializing Data Serialization and Deserialization...");
-	data.Write(23);
+	size_t message_length;
+	int buffer_length = 128;
+	uint8_t write_buffer[buffer_length];
+	Serial.print("sizeof(write_buffer): ");
+	Serial.println(sizeof(write_buffer));
+	uint8_t read_buffer[buffer_length];
+	ReadingMessage message;
+	char filename[9] = "test.txt";
+	data.SerializeReading(write_buffer, buffer_length, message_length, 1, 1.0, 60, 1.1, 1.2, 2, 3);
+	data.DeserializeReading(message, message_length, write_buffer);
+	data.Write(filename, write_buffer, message_length);
+	data.Read(filename, read_buffer, message_length);
+    data.DeserializeReading(message, message_length, read_buffer);
 	Serial.println("Done!\n");
 
 	Serial.println("- - - - - - - - - -\n\n");

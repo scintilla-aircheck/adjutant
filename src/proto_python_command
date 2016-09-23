@@ -1,1 +1,0 @@
-/home/chris/scintilla/nanopb-0.3.6-linux-x86/generator-bin/protoc -I /home/chris/Arduino/sensor_mcu/ --python_out /home/chris/Arduino/sensor_mcu/ /home/chris/Arduino/sensor_mcu/sensor_data.proto
