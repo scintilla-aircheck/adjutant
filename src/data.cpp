@@ -20,23 +20,9 @@ message ReadingMessage {
 }
 */
 
-// Serialize data into a uint8_t buffer representation of ReadingMessage
-bool Data::SerializeReading(uint8_t *buffer, int buffer_length, size_t &message_length, int sensor, double value, int long average_over_seconds, double longitude, double latitude, int unit, int long time) {
+bool Data::BuildReading(ReadingMessage &message, int sensor, double value, int long average_over_seconds, double longitude, double latitude, int unit, int long time) {
 
-    uint8_t _buffer[buffer_length];
-
-    bool status;
-
-    ReadingMessage message = ReadingMessage_init_zero;
-
-    pb_ostream_t stream = pb_ostream_from_buffer(buffer, buffer_length);
-    //pb_ostream_t stream = pb_ostream_from_buffer(_buffer, sizeof(_buffer));
-
-    Serial.print("buffer_length: ");
-    Serial.println(buffer_length);
-    //Serial.print("sizeof(_buffer): ");
-    //Serial.println(sizeof(_buffer));
-
+    message = ReadingMessage_init_zero;
 
     message.sensor = sensor;
     message.value = value;
@@ -54,6 +40,35 @@ bool Data::SerializeReading(uint8_t *buffer, int buffer_length, size_t &message_
     message.has_unit = true;
     message.has_time = true;
 
+    return true;
+}
+
+bool Data::BuildReadingGroup(ReadingGroupMessage &group_message, ReadingMessage *message, int num_messages) {
+
+    group_message = ReadingGroupMessage_init_zero;
+    /*
+    for(int i = 0; i < num_messages; i++) {
+        group_message.readings[i] = message[i];
+    }
+    */
+    return true;
+}
+
+// Serialize data into a uint8_t buffer representation of ReadingMessage
+//bool Data::SerializeReading(uint8_t *buffer, int buffer_length, size_t &message_length, int sensor, double value, int long average_over_seconds, double longitude, double latitude, int unit, int long time) {
+bool Data::SerializeReading(uint8_t *buffer, int buffer_length, size_t &message_length, ReadingMessage message) {
+
+    //uint8_t _buffer[buffer_length];
+
+    bool status;
+
+    pb_ostream_t stream = pb_ostream_from_buffer(buffer, buffer_length);
+    //pb_ostream_t stream = pb_ostream_from_buffer(_buffer, sizeof(_buffer));
+
+    Serial.print("buffer_length: ");
+    Serial.println(buffer_length);
+    //Serial.print("sizeof(_buffer): ");
+    //Serial.println(sizeof(_buffer));
 
     status = pb_encode(&stream, ReadingMessage_fields, &message);
     message_length = stream.bytes_written;
@@ -78,10 +93,47 @@ bool Data::SerializeReading(uint8_t *buffer, int buffer_length, size_t &message_
     return true;
 }
 
+bool Data::SerializeReadingGroup(uint8_t *buffer, int buffer_length, size_t &message_length, ReadingGroupMessage group_message) {
+
+    //uint8_t _buffer[buffer_length];
+
+    bool status;
+
+    pb_ostream_t stream = pb_ostream_from_buffer(buffer, buffer_length);
+    //pb_ostream_t stream = pb_ostream_from_buffer(_buffer, sizeof(_buffer));
+
+    Serial.print("buffer_length: ");
+    Serial.println(buffer_length);
+    //Serial.print("sizeof(_buffer): ");
+    //Serial.println(sizeof(_buffer));
+
+    status = pb_encode(&stream, ReadingGroupMessage_fields, &group_message);
+    message_length = stream.bytes_written;
+
+    if (!status) {
+        Serial.print("SerializeReadingGroup:: Encoding failed: ");
+        Serial.println(PB_GET_ERROR(&stream));
+        return false;
+    }
+
+    Serial.print("SerializeReadingGroup:: buffer: ");
+    Serial.write(buffer, message_length);
+    Serial.println("");
+    //Serial.print("SerializeReading:: buffer: ");
+    //Serial.write(_buffer, message_length);
+    //Serial.println("");
+    Serial.print("SerializeReadingGroup:: Message length: ");
+    Serial.println(message_length);
+
+    //buffer = _buffer;
+
+    return true;
+}
+
 // Deserialize uint8_t buffer representation of ReadingMessage into ReadingMessage
 bool Data::DeserializeReading(ReadingMessage &message, size_t &message_length, uint8_t *buffer) {
 
-    uint8_t _buffer[message_length];
+    //uint8_t _buffer[message_length];
 
     bool status;
 
@@ -109,6 +161,42 @@ bool Data::DeserializeReading(ReadingMessage &message, size_t &message_length, u
     Serial.println(message.latitude);
     Serial.println(message.unit);
     Serial.println((int)message.time);
+
+    return true;
+}
+
+bool Data::DeserializeReadingGroup(ReadingGroupMessage &group_message, size_t &message_length, uint8_t *buffer) {
+
+    //uint8_t _buffer[message_length];
+
+    bool status;
+
+    group_message = ReadingGroupMessage_init_zero;
+
+    /* Create a stream that reads from the buffer. */
+    pb_istream_t stream = pb_istream_from_buffer(buffer, message_length);
+
+    /* Now we are ready to decode the message. */
+    status = pb_decode(&stream, ReadingGroupMessage_fields, &group_message);
+
+    /* Check for errors... */
+    if (!status) {
+        Serial.print("Decoding failed: ");
+        Serial.println(PB_GET_ERROR(&stream));
+        return false;
+    }
+
+    /* Print the data contained in the message. */
+    /*
+    Serial.println("ReadingGroupMessage:");
+    Serial.println(group_message.readings(0).sensor);
+    Serial.println(group_message.readings(0).value);
+    Serial.println((int)group_message.readings(0).average_over_seconds);
+    Serial.println(group_message.readings(0).longitude);
+    Serial.println(group_message.readings(0).latitude);
+    Serial.println(group_message.readings(0).unit);
+    Serial.println((int)group_message.readings(0).time);
+    */
 
     return true;
 }

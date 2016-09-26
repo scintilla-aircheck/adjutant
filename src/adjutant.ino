@@ -93,7 +93,9 @@ void setup ()
 	uint8_t read_buffer[buffer_length];
 	ReadingMessage message;
 	char filename[9] = "test.txt";
-	data.SerializeReading(write_buffer, buffer_length, message_length, 1, 1.0, 60, 1.1, 1.2, 2, 3);
+	data.BuildReading(message, 1, 1.0, 60, 1.1, 1.2, 2, 3);
+	//data.SerializeReading(write_buffer, buffer_length, message_length, 1, 1.0, 60, 1.1, 1.2, 2, 3);
+	data.SerializeReading(write_buffer, buffer_length, message_length, message);
 	data.DeserializeReading(message, message_length, write_buffer);
 	data.Write(filename, write_buffer, message_length);
 	data.Read(filename, read_buffer, message_length);
