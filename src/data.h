@@ -14,8 +14,6 @@ public:
 	Data();
 	~Data();
 
-	bool PrintSPIFFSFiles();
-
 	bool PrintReading(ReadingMessage message);
 
 	bool BuildReading(ReadingMessage &message, int sensor, double value, int long average_over_seconds, double longitude, double latitude, int unit, int long time);
@@ -30,11 +28,10 @@ public:
 
 	bool DeserializeReadingGroup(ReadingGroupMessage &group_message, size_t &message_length, uint8_t *buffer);
 
-    // Read
-    bool Read(char *filename, uint8_t *buffer, size_t message_length);
+    //bool Read(char *filename, uint8_t *buffer, size_t message_length);
+    bool Read(File f, uint8_t *buffer, size_t message_length);
 
-	// Write To Memory
-	bool Write(char *filename, uint8_t *buffer, size_t message_length);
+	bool Append(char *filename, uint8_t *buffer, size_t message_length);
 
 private:
 

@@ -70,8 +70,6 @@ void setup ()
         Serial.println("Flash Chip configuration ok.\n");
     }
 
-    data.PrintSPIFFSFiles();
-
 	Serial.println("Hardware serial initialized.\n");
 
 	// Initialize I2C connection
@@ -117,13 +115,15 @@ void setup ()
 
 	size_t message_length;
 	uint8_t buffer[buffer_length];
-	//uint8_t read_buffer[buffer_length];
+	uint8_t message_length_buffer[4];  // 4 bytes per size_t
 
 	ReadingMessage *messages = new ReadingMessage[num_messages];
 	ReadingGroupMessage group_message = ReadingGroupMessage_init_zero;
 
-	Serial.print("sizeof(buffer): ");
+	Serial.print("setup:: sizeof(buffer): ");
 	Serial.println(sizeof(buffer));
+	Serial.print("setup:: sizeof(message_length): ");
+	Serial.println(sizeof(message_length));
 
     for(int i = 0; i < num_messages; i++) {
         data.BuildReading(messages[i], 1 * (i+1), 1.0 * (i+1), 60 * (i+1), 1.1 * (i+1), 1.2 * (i+1), 2 * (i+1), 3 * (i+1));
@@ -136,17 +136,27 @@ void setup ()
     // free up some heap; we don't need messages anymore
 	delete [] messages;
 
-	//data.SerializeReading(write_buffer, buffer_length, message_length, message);
-
 	data.SerializeReadingGroup(buffer, buffer_length, message_length, group_message);
-	//data.DeserializeReading(message, message_length, write_buffer);
 	data.DeserializeReadingGroup(group_message, message_length, buffer);
-	data.Write(filename, buffer, message_length);
-	//for (int i = 0; i < sizeof(buffer); i++) {
-    //    buffer[i] = (uint8_t)'\0';
-    //}
-	data.Read(filename, buffer, message_length);
-    //data.DeserializeReading(message, message_length, read_buffer);
+
+	message_length_buffer[0] = (message_length >> 24) & 0xFF;
+    message_length_buffer[1] = (message_length >> 16) & 0xFF;
+    message_length_buffer[2] = (message_length >> 8) & 0xFF;
+    message_length_buffer[3] = message_length & 0xFF;
+
+	data.Append(filename, message_length_buffer, 4);
+	data.Append(filename, buffer, message_length);
+	File f = SPIFFS.open(filename, "r");
+	data.Read(f, message_length_buffer, 4);
+	message_length = message_length_buffer[3] |
+	                 (size_t)message_length_buffer[2] << 8 |
+	                 (size_t)message_length_buffer[1] << 16 |
+	                 (size_t)message_length_buffer[0] << 24;
+	Serial.print("setup:: message_length: ");
+	Serial.println(message_length);
+	data.Read(f, buffer, message_length);
+	f.close();
+
     data.DeserializeReadingGroup(group_message, message_length, buffer);
 
 	Serial.println("Done!\n");

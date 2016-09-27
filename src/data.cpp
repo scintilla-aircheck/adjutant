@@ -34,18 +34,6 @@ bool Data::PrintReading(ReadingMessage message) {
     return true;
 }
 
-bool Data::PrintSPIFFSFiles() {
-    String str = "";
-    Dir dir = SPIFFS.openDir("/");
-    while (dir.next()) {
-        str += dir.fileName();
-        str += " / ";
-        str += dir.fileSize();
-        str += "\n";
-    }
-    Serial.println(str); // - See more at: http://www.esp8266.com/viewtopic.php?f=32&t=8459#sthash.Ia8ICfTh.dpuf
-}
-
 bool Data::BuildReading(ReadingMessage &message, int sensor, double value, int long average_over_seconds, double longitude, double latitude, int unit, int long time) {
 
     message = ReadingMessage_init_zero;
@@ -207,10 +195,9 @@ bool Data::DeserializeReadingGroup(ReadingGroupMessage &group_message, size_t &m
     return true;
 }
 
-bool Data::Read(char *filename, uint8_t *buffer, size_t message_length) {
+bool Data::Read(File f, uint8_t *buffer, size_t message_length) {
 
-    String line;
-    File f = SPIFFS.open(filename, "r");
+    //File f = SPIFFS.open(filename, "r");
 
     if(f) {
         if(f.available()) {
@@ -223,11 +210,9 @@ bool Data::Read(char *filename, uint8_t *buffer, size_t message_length) {
         Serial.write(buffer, message_length);
         Serial.println("");
 
-        f.close();
+        //f.close();
     } else {
         Serial.println("Read:: Tried to open file that doesn't exist.");
-        Serial.print("Read:: Named: ");
-        Serial.println(filename);
 
         return false;
     }
@@ -235,26 +220,27 @@ bool Data::Read(char *filename, uint8_t *buffer, size_t message_length) {
     return true;
 }
 
-bool Data::Write(char *filename, uint8_t *buffer, size_t message_length) {
+bool Data::Append(char *filename, uint8_t *buffer, size_t message_length) {
 
     // always use this to "mount" the filesystem
     bool result = SPIFFS.begin();
-    Serial.print("Write:: SPIFFS opened: ");
+    Serial.print("Append:: SPIFFS opened: ");
     Serial.println(result);
 
-    Serial.println("Write:: Opening file in write mode.");
+    Serial.println("Append:: Opening file in append mode.");
     // open the file in write mode
-    File f = SPIFFS.open(filename, "w");
+    File f = SPIFFS.open(filename, "a+");
     if(!f) {
-        Serial.println("Write:: file creation failed");
+        Serial.println("Append:: file creation failed");
     }
     // now write one line
+    //f.seek(-1, SeekEnd);
     f.write(buffer, message_length);
     //f.write('\n');
-    Serial.print("Write:: Here's what we wrote: ");
+    Serial.print("Append:: Here's what we wrote: ");
     Serial.write(buffer, message_length);
     Serial.println("");
-    Serial.print("Write:: Message length: ");
+    Serial.print("Append:: Message length: ");
     Serial.println(message_length);
 
     f.close();
