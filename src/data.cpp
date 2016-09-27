@@ -34,6 +34,18 @@ bool Data::PrintReading(ReadingMessage message) {
     return true;
 }
 
+bool Data::PrintSPIFFSFiles() {
+    String str = "";
+    Dir dir = SPIFFS.openDir("/");
+    while (dir.next()) {
+        str += dir.fileName();
+        str += " / ";
+        str += dir.fileSize();
+        str += "\n";
+    }
+    Serial.println(str); // - See more at: http://www.esp8266.com/viewtopic.php?f=32&t=8459#sthash.Ia8ICfTh.dpuf
+}
+
 bool Data::BuildReading(ReadingMessage &message, int sensor, double value, int long average_over_seconds, double longitude, double latitude, int unit, int long time) {
 
     message = ReadingMessage_init_zero;
@@ -83,7 +95,7 @@ bool Data::BuildReadingGroup(ReadingGroupMessage &group_message, ReadingMessage 
 
 // Serialize data into a uint8_t buffer representation of ReadingMessage
 //bool Data::SerializeReading(uint8_t *buffer, int buffer_length, size_t &message_length, int sensor, double value, int long average_over_seconds, double longitude, double latitude, int unit, int long time) {
-bool Data::SerializeReading(uint8_t *buffer, int buffer_length, size_t &message_length, ReadingMessage message) {
+bool Data::SerializeReading(uint8_t *buffer, int buffer_length, size_t &message_length, ReadingMessage &message) {
 
     bool status;
 
@@ -110,7 +122,7 @@ bool Data::SerializeReading(uint8_t *buffer, int buffer_length, size_t &message_
     return true;
 }
 
-bool Data::SerializeReadingGroup(uint8_t *buffer, int buffer_length, size_t &message_length, ReadingGroupMessage group_message) {
+bool Data::SerializeReadingGroup(uint8_t *buffer, int buffer_length, size_t &message_length, ReadingGroupMessage &group_message) {
 
     bool status;
 
@@ -246,8 +258,6 @@ bool Data::Write(char *filename, uint8_t *buffer, size_t message_length) {
     Serial.println(message_length);
 
     f.close();
-
-    Serial.println("TEST");
 
     return true;
 }

@@ -61,14 +61,16 @@ void setup ()
 
     Serial.print("Flash ide size:  ");
     Serial.println(ideSize);
-    //Serial.printf("Flash ide speed: %u\n", ESP.getFlashChipSpeed());
-    //Serial.printf("Flash ide mode:  %s\n", (ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN"));
+    Serial.printf("Flash ide speed: %u\n", ESP.getFlashChipSpeed());
+    Serial.printf("Flash ide mode:  %s\n", (ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN"));
 
     if(ideSize != realSize) {
         Serial.println("Flash Chip configuration wrong!\n");
     } else {
         Serial.println("Flash Chip configuration ok.\n");
     }
+
+    data.PrintSPIFFSFiles();
 
 	Serial.println("Hardware serial initialized.\n");
 
@@ -108,40 +110,44 @@ void setup ()
 
 	// Test Data Serialization and Deserialization
 	Serial.println("Initializing Data Serialization and Deserialization...");
+
+    int num_messages = 10;
+    char filename[9] = "test.txt";
+    int buffer_length = ReadingGroupMessage_size;
+
 	size_t message_length;
-	int buffer_length = ReadingGroupMessage_size;
-	uint8_t write_buffer[buffer_length];
-	Serial.print("sizeof(write_buffer): ");
-	Serial.println(sizeof(write_buffer));
-	uint8_t read_buffer[buffer_length];
-	//ReadingMessage message;
-	ReadingMessage messages[3];
-	//messages[0] = message;
+	uint8_t buffer[buffer_length];
+	//uint8_t read_buffer[buffer_length];
+
+	ReadingMessage *messages = new ReadingMessage[num_messages];
 	ReadingGroupMessage group_message = ReadingGroupMessage_init_zero;
-	char filename[9] = "test.txt";
 
-	data.BuildReading(messages[0], 1, 1.0, 60, 1.1, 1.2, 2, 3);
-	data.BuildReading(messages[1], 2, 2.0, 120, 2.1, 2.2, 4, 6);
-	data.BuildReading(messages[2], 3, 3.0, 180, 3.1, 3.2, 6, 9);
+	Serial.print("sizeof(buffer): ");
+	Serial.println(sizeof(buffer));
 
-    Serial.println("setup::");
-    data.PrintReading(messages[0]);
-    Serial.println("setup::");
-    data.PrintReading(messages[1]);
-    Serial.println("setup::");
-    data.PrintReading(messages[2]);
+    for(int i = 0; i < num_messages; i++) {
+        data.BuildReading(messages[i], 1 * (i+1), 1.0 * (i+1), 60 * (i+1), 1.1 * (i+1), 1.2 * (i+1), 2 * (i+1), 3 * (i+1));
+        Serial.println("setup::");
+        data.PrintReading(messages[i]);
+    }
 
-	data.BuildReadingGroup(group_message, messages, 3);
+	data.BuildReadingGroup(group_message, messages, num_messages);
+
+    // free up some heap; we don't need messages anymore
+	delete [] messages;
 
 	//data.SerializeReading(write_buffer, buffer_length, message_length, message);
 
-	data.SerializeReadingGroup(write_buffer, buffer_length, message_length, group_message);
+	data.SerializeReadingGroup(buffer, buffer_length, message_length, group_message);
 	//data.DeserializeReading(message, message_length, write_buffer);
-	data.DeserializeReadingGroup(group_message, message_length, write_buffer);
-	data.Write(filename, write_buffer, message_length);
-	data.Read(filename, read_buffer, message_length);
+	data.DeserializeReadingGroup(group_message, message_length, buffer);
+	data.Write(filename, buffer, message_length);
+	//for (int i = 0; i < sizeof(buffer); i++) {
+    //    buffer[i] = (uint8_t)'\0';
+    //}
+	data.Read(filename, buffer, message_length);
     //data.DeserializeReading(message, message_length, read_buffer);
-    data.DeserializeReadingGroup(group_message, message_length, read_buffer);
+    data.DeserializeReadingGroup(group_message, message_length, buffer);
 
 	Serial.println("Done!\n");
 
