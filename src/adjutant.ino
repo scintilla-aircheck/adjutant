@@ -49,6 +49,27 @@ void setup ()
 	Serial.begin(9600);
 	while (!Serial); // Necessary for USB
 	delay(1000);
+
+	uint32_t realSize = ESP.getFlashChipRealSize();
+    uint32_t ideSize = ESP.getFlashChipSize();
+    FlashMode_t ideMode = ESP.getFlashChipMode();
+
+    Serial.print("Flash real id:   ");
+    Serial.println(ESP.getFlashChipId());
+    Serial.print("Flash real size: ");
+    Serial.println(realSize);
+
+    Serial.print("Flash ide size:  ");
+    Serial.println(ideSize);
+    //Serial.printf("Flash ide speed: %u\n", ESP.getFlashChipSpeed());
+    //Serial.printf("Flash ide mode:  %s\n", (ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN"));
+
+    if(ideSize != realSize) {
+        Serial.println("Flash Chip configuration wrong!\n");
+    } else {
+        Serial.println("Flash Chip configuration ok.\n");
+    }
+
 	Serial.println("Hardware serial initialized.\n");
 
 	// Initialize I2C connection
@@ -57,6 +78,7 @@ void setup ()
 	Wire.begin();
 	Serial.println("Done!\n");
 
+    /*
 	// Initialize software serial connection
 	Serial.print("Initializing dust sensor...");
 	dust.Begin();
@@ -64,6 +86,7 @@ void setup ()
 	dust.Awake(false);
 	dust.Update();
 	Serial.println("Done!\n");
+	*/
 
 	// Initialize SPEC sensors
 	Serial.print("Initializing PSTAT circuit...");
@@ -86,20 +109,40 @@ void setup ()
 	// Test Data Serialization and Deserialization
 	Serial.println("Initializing Data Serialization and Deserialization...");
 	size_t message_length;
-	int buffer_length = 128;
+	int buffer_length = ReadingGroupMessage_size;
 	uint8_t write_buffer[buffer_length];
 	Serial.print("sizeof(write_buffer): ");
 	Serial.println(sizeof(write_buffer));
 	uint8_t read_buffer[buffer_length];
-	ReadingMessage message;
+	//ReadingMessage message;
+	ReadingMessage messages[3];
+	//messages[0] = message;
+	ReadingGroupMessage group_message = ReadingGroupMessage_init_zero;
 	char filename[9] = "test.txt";
-	data.BuildReading(message, 1, 1.0, 60, 1.1, 1.2, 2, 3);
-	//data.SerializeReading(write_buffer, buffer_length, message_length, 1, 1.0, 60, 1.1, 1.2, 2, 3);
-	data.SerializeReading(write_buffer, buffer_length, message_length, message);
-	data.DeserializeReading(message, message_length, write_buffer);
+
+	data.BuildReading(messages[0], 1, 1.0, 60, 1.1, 1.2, 2, 3);
+	data.BuildReading(messages[1], 2, 2.0, 120, 2.1, 2.2, 4, 6);
+	data.BuildReading(messages[2], 3, 3.0, 180, 3.1, 3.2, 6, 9);
+
+    Serial.println("setup::");
+    data.PrintReading(messages[0]);
+    Serial.println("setup::");
+    data.PrintReading(messages[1]);
+    Serial.println("setup::");
+    data.PrintReading(messages[2]);
+
+	data.BuildReadingGroup(group_message, messages, 3);
+
+	//data.SerializeReading(write_buffer, buffer_length, message_length, message);
+
+	data.SerializeReadingGroup(write_buffer, buffer_length, message_length, group_message);
+	//data.DeserializeReading(message, message_length, write_buffer);
+	data.DeserializeReadingGroup(group_message, message_length, write_buffer);
 	data.Write(filename, write_buffer, message_length);
 	data.Read(filename, read_buffer, message_length);
-    data.DeserializeReading(message, message_length, read_buffer);
+    //data.DeserializeReading(message, message_length, read_buffer);
+    data.DeserializeReadingGroup(group_message, message_length, read_buffer);
+
 	Serial.println("Done!\n");
 
 	Serial.println("- - - - - - - - - -\n\n");
@@ -107,6 +150,7 @@ void setup ()
 
 void loop ()
 {
+    /*
 	dust.Awake(true);
 
 	delay(5 * 1000);
@@ -127,6 +171,7 @@ void loop ()
 	delay(1000);
 
 	dust.Awake(false);
+    */
 
 	Serial.print("VOUT: ");
 	Serial.println(gas.ADC(), 4);

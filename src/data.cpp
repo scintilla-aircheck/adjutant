@@ -20,6 +20,20 @@ message ReadingMessage {
 }
 */
 
+bool Data::PrintReading(ReadingMessage message) {
+
+    Serial.println("ReadingMessage:");
+    Serial.println(message.sensor);
+    Serial.println(message.value);
+    Serial.println((int)message.average_over_seconds);
+    Serial.println(message.longitude);
+    Serial.println(message.latitude);
+    Serial.println(message.unit);
+    Serial.println((int)message.time);
+
+    return true;
+}
+
 bool Data::BuildReading(ReadingMessage &message, int sensor, double value, int long average_over_seconds, double longitude, double latitude, int unit, int long time) {
 
     message = ReadingMessage_init_zero;
@@ -45,12 +59,25 @@ bool Data::BuildReading(ReadingMessage &message, int sensor, double value, int l
 
 bool Data::BuildReadingGroup(ReadingGroupMessage &group_message, ReadingMessage *message, int num_messages) {
 
-    group_message = ReadingGroupMessage_init_zero;
-    /*
+    //group_message = ReadingGroupMessage_init_zero;
+
+    ReadingMessage *ptr = message;
+    int counter = 0;
+
+    group_message.readings_count = num_messages;
+
     for(int i = 0; i < num_messages; i++) {
         group_message.readings[i] = message[i];
     }
+
+    /*
+    while(ptr < message + num_messages) {
+        group_message.readings[counter] = *ptr;
+        ptr++;
+        counter++;
+    }
     */
+
     return true;
 }
 
@@ -58,22 +85,17 @@ bool Data::BuildReadingGroup(ReadingGroupMessage &group_message, ReadingMessage 
 //bool Data::SerializeReading(uint8_t *buffer, int buffer_length, size_t &message_length, int sensor, double value, int long average_over_seconds, double longitude, double latitude, int unit, int long time) {
 bool Data::SerializeReading(uint8_t *buffer, int buffer_length, size_t &message_length, ReadingMessage message) {
 
-    //uint8_t _buffer[buffer_length];
-
     bool status;
 
     pb_ostream_t stream = pb_ostream_from_buffer(buffer, buffer_length);
-    //pb_ostream_t stream = pb_ostream_from_buffer(_buffer, sizeof(_buffer));
 
     Serial.print("buffer_length: ");
     Serial.println(buffer_length);
-    //Serial.print("sizeof(_buffer): ");
-    //Serial.println(sizeof(_buffer));
 
     status = pb_encode(&stream, ReadingMessage_fields, &message);
     message_length = stream.bytes_written;
 
-    if (!status) {
+    if(!status) {
         Serial.print("SerializeReading:: Encoding failed: ");
         Serial.println(PB_GET_ERROR(&stream));
         return false;
@@ -82,35 +104,25 @@ bool Data::SerializeReading(uint8_t *buffer, int buffer_length, size_t &message_
     Serial.print("SerializeReading:: buffer: ");
     Serial.write(buffer, message_length);
     Serial.println("");
-    //Serial.print("SerializeReading:: buffer: ");
-    //Serial.write(_buffer, message_length);
-    //Serial.println("");
     Serial.print("SerializeReading:: Message length: ");
     Serial.println(message_length);
-
-    //buffer = _buffer;
 
     return true;
 }
 
 bool Data::SerializeReadingGroup(uint8_t *buffer, int buffer_length, size_t &message_length, ReadingGroupMessage group_message) {
 
-    //uint8_t _buffer[buffer_length];
-
     bool status;
 
     pb_ostream_t stream = pb_ostream_from_buffer(buffer, buffer_length);
-    //pb_ostream_t stream = pb_ostream_from_buffer(_buffer, sizeof(_buffer));
 
     Serial.print("buffer_length: ");
     Serial.println(buffer_length);
-    //Serial.print("sizeof(_buffer): ");
-    //Serial.println(sizeof(_buffer));
 
     status = pb_encode(&stream, ReadingGroupMessage_fields, &group_message);
     message_length = stream.bytes_written;
 
-    if (!status) {
+    if(!status) {
         Serial.print("SerializeReadingGroup:: Encoding failed: ");
         Serial.println(PB_GET_ERROR(&stream));
         return false;
@@ -119,21 +131,14 @@ bool Data::SerializeReadingGroup(uint8_t *buffer, int buffer_length, size_t &mes
     Serial.print("SerializeReadingGroup:: buffer: ");
     Serial.write(buffer, message_length);
     Serial.println("");
-    //Serial.print("SerializeReading:: buffer: ");
-    //Serial.write(_buffer, message_length);
-    //Serial.println("");
     Serial.print("SerializeReadingGroup:: Message length: ");
     Serial.println(message_length);
-
-    //buffer = _buffer;
 
     return true;
 }
 
 // Deserialize uint8_t buffer representation of ReadingMessage into ReadingMessage
 bool Data::DeserializeReading(ReadingMessage &message, size_t &message_length, uint8_t *buffer) {
-
-    //uint8_t _buffer[message_length];
 
     bool status;
 
@@ -146,28 +151,20 @@ bool Data::DeserializeReading(ReadingMessage &message, size_t &message_length, u
     status = pb_decode(&stream, ReadingMessage_fields, &message);
 
     /* Check for errors... */
-    if (!status) {
+    if(!status) {
         Serial.print("Decoding failed: ");
         Serial.println(PB_GET_ERROR(&stream));
         return false;
     }
 
     /* Print the data contained in the message. */
-    Serial.println("ReadingMessage:");
-    Serial.println(message.sensor);
-    Serial.println(message.value);
-    Serial.println((int)message.average_over_seconds);
-    Serial.println(message.longitude);
-    Serial.println(message.latitude);
-    Serial.println(message.unit);
-    Serial.println((int)message.time);
+    Serial.println("DeserializeReading::");
+    PrintReading(message);
 
     return true;
 }
 
 bool Data::DeserializeReadingGroup(ReadingGroupMessage &group_message, size_t &message_length, uint8_t *buffer) {
-
-    //uint8_t _buffer[message_length];
 
     bool status;
 
@@ -180,23 +177,20 @@ bool Data::DeserializeReadingGroup(ReadingGroupMessage &group_message, size_t &m
     status = pb_decode(&stream, ReadingGroupMessage_fields, &group_message);
 
     /* Check for errors... */
-    if (!status) {
+    if(!status) {
         Serial.print("Decoding failed: ");
         Serial.println(PB_GET_ERROR(&stream));
         return false;
     }
 
+    Serial.print("DeserializeReadingGroup:: Message length: ");
+    Serial.println(message_length);
+
     /* Print the data contained in the message. */
-    /*
-    Serial.println("ReadingGroupMessage:");
-    Serial.println(group_message.readings(0).sensor);
-    Serial.println(group_message.readings(0).value);
-    Serial.println((int)group_message.readings(0).average_over_seconds);
-    Serial.println(group_message.readings(0).longitude);
-    Serial.println(group_message.readings(0).latitude);
-    Serial.println(group_message.readings(0).unit);
-    Serial.println((int)group_message.readings(0).time);
-    */
+    Serial.println("DeserializeReadingGroup:: ");
+    for(int i = 0; i < group_message.readings_count; i++) {
+        PrintReading(group_message.readings[i]);
+    }
 
     return true;
 }
@@ -206,35 +200,22 @@ bool Data::Read(char *filename, uint8_t *buffer, size_t message_length) {
     String line;
     File f = SPIFFS.open(filename, "r");
 
-    if (f) {
-        if (f.available()) {
-            //f.readStringUntil('\n').toCharArray(buffer, sizeof(buffer));
-            //buffer = (unsigned char*)f.readStringUntil('\n').c_str();
-            line = f.readStringUntil('\n');
+    if(f) {
+        if(f.available()) {
+            f.read(buffer, message_length);
+        } else {
+            Serial.println("Read:: File not available.");
         }
-        /*
-        while(f.available()) {
-            //Lets read line by line from the file
-            String line = f.readStringUntil('\n');
-            Serial.println(line);
-        }
-        */
 
-        Serial.print("Here's what we read: ");
-        //Serial.println((const char*)buffer);
-        Serial.println(line);
-        //strcpy((char *)buffer, line.c_str());
-        for (int a = 0; a <= message_length; a++) {
-            buffer[a] = line[a];
-        }
+        Serial.print("Read:: Here's what we read as a uint8_t: ");
         Serial.write(buffer, message_length);
         Serial.println("");
 
         f.close();
     } else {
-        Serial.println("Tried to open file that doesn't exist.");
-        Serial.print("Named: ");
-        Serial.print(filename);
+        Serial.println("Read:: Tried to open file that doesn't exist.");
+        Serial.print("Read:: Named: ");
+        Serial.println(filename);
 
         return false;
     }
@@ -244,41 +225,29 @@ bool Data::Read(char *filename, uint8_t *buffer, size_t message_length) {
 
 bool Data::Write(char *filename, uint8_t *buffer, size_t message_length) {
 
-    //buffer = (unsigned char*)"hijklmnop";
-
     // always use this to "mount" the filesystem
     bool result = SPIFFS.begin();
-    Serial.print("SPIFFS opened: ");
+    Serial.print("Write:: SPIFFS opened: ");
     Serial.println(result);
 
-    // this opens the file "f.txt" in read-mode
-    //File f = SPIFFS.open(filename, "r");
-
-    //if (!f) {
-        //Serial.println("File doesn't exist yet. Creating it");
-        Serial.println("Opening file in write mode.");
-        // open the file in write mode
-        File f = SPIFFS.open(filename, "w");
-        if (!f) {
-            Serial.println("file creation failed");
-        }
-        // now write one line with an end-of-line character
-        f.write(buffer, message_length);
-        f.write('\n');
-        Serial.print("Here's what we wrote: ");
-        Serial.write(buffer, message_length);
-        Serial.println("");
-    /*
-    } else {
-        // we could open the file
-        while(f.available()) {
-            //Lets read line by line from the file
-            String line = f.readStringUntil('\n');
-            Serial.println(line);
-        }
+    Serial.println("Write:: Opening file in write mode.");
+    // open the file in write mode
+    File f = SPIFFS.open(filename, "w");
+    if(!f) {
+        Serial.println("Write:: file creation failed");
     }
-    */
+    // now write one line
+    f.write(buffer, message_length);
+    //f.write('\n');
+    Serial.print("Write:: Here's what we wrote: ");
+    Serial.write(buffer, message_length);
+    Serial.println("");
+    Serial.print("Write:: Message length: ");
+    Serial.println(message_length);
+
     f.close();
+
+    Serial.println("TEST");
 
     return true;
 }

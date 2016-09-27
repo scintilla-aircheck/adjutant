@@ -25,5 +25,5 @@ private:
     char *ota_ip = (char *)"192.168.0.1";
     uint16_t ota_port = 1337;
     char *ota_file = (char *)"/example.bin";
-    unsigned int retry_timeout_attempts = 10; // number of attempts to connect to WiFi before giving up
+    unsigned int retry_timeout_attempts = 5; // number of attempts to connect to WiFi before giving up
 };
