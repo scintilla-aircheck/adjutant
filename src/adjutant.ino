@@ -43,40 +43,49 @@ OTA ota = OTA();
 // Data
 Data data = Data();
 
-void setup ()
+void ICACHE_FLASH_ATTR printFreeRam() {
+    Serial.print(F("Free ram: "));
+    Serial.println(ESP.getFreeHeap());
+    Serial.println("");
+}
+
+void ICACHE_FLASH_ATTR setup ()
 {
 	// Intialize UART connection
 	Serial.begin(9600);
 	while (!Serial); // Necessary for USB
-	delay(1000);
 
 	uint32_t realSize = ESP.getFlashChipRealSize();
     uint32_t ideSize = ESP.getFlashChipSize();
     FlashMode_t ideMode = ESP.getFlashChipMode();
 
-    Serial.print("Flash real id:   ");
+    Serial.print(F("Flash real id:   "));
     Serial.println(ESP.getFlashChipId());
-    Serial.print("Flash real size: ");
+    Serial.print(F("Flash real size: "));
     Serial.println(realSize);
 
-    Serial.print("Flash ide size:  ");
+    Serial.print(F("Flash ide size:  "));
     Serial.println(ideSize);
-    Serial.printf("Flash ide speed: %u\n", ESP.getFlashChipSpeed());
-    Serial.printf("Flash ide mode:  %s\n", (ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN"));
+    Serial.print(F("Flash ide speed: "));
+    Serial.println(ESP.getFlashChipSpeed());
+    Serial.print(F("Flash ide mode:  "));
+    Serial.println(ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN");
 
     if(ideSize != realSize) {
-        Serial.println("Flash Chip configuration wrong!\n");
+        Serial.println(F("Flash Chip configuration wrong!\n"));
     } else {
-        Serial.println("Flash Chip configuration ok.\n");
+        Serial.println(F("Flash Chip configuration ok.\n"));
     }
 
-	Serial.println("Hardware serial initialized.\n");
+    printFreeRam();
+
+	Serial.println(F("Hardware serial initialized.\n"));
 
 	// Initialize I2C connection
-	Serial.print("Initializing I2C bus...");
+	Serial.print(F("Initializing I2C bus..."));
 	Wire.pins(I2CSDA_PIN, I2CSCL_PIN);
 	Wire.begin();
-	Serial.println("Done!\n");
+	Serial.println(F("Done!\n"));
 
     /*
 	// Initialize software serial connection
@@ -89,7 +98,7 @@ void setup ()
 	*/
 
 	// Initialize SPEC sensors
-	Serial.print("Initializing PSTAT circuit...");
+	Serial.print(F("Initializing PSTAT circuit..."));
 	gas.Begin();
 	gas.ADC(true, MCP3425::EResolution::d16Bit, MCP3425::EGain::x1);
 	gas.Configure(0, SPEC::CO);
@@ -97,17 +106,19 @@ void setup ()
 	Serial.println("Done!\n");
 
 	// Initialize OTA
-	Serial.print("Initializing OTA...");
-	if(ota.Connect("DLab", "endmill1")) {
+	Serial.print(F("Initializing OTA..."));
+	bool connected = ota.Connect("DLab", "endmill1");
+	if(connected) {
 	    // Attempt OTA Update
-        Serial.print("\tInitializing OTA Update...");
+        Serial.print(F("\tInitializing OTA Update..."));
         ota.OtaUpdate("192.168.0.1", 1337, "/example.bin");
-        Serial.println("\tDone!");
+        Serial.println(F("\tDone!"));
 	}
-	Serial.println("Done!\n");
+	Serial.println(F("Done!\n"));
+	delay(1); // reset WDT
 
 	// Test Data Serialization and Deserialization
-	Serial.println("Initializing Data Serialization and Deserialization...");
+	Serial.println(F("Initializing Data Serialization and Deserialization..."));
 
     int num_messages = 10;
     char filename[9] = "test.txt";
@@ -120,24 +131,27 @@ void setup ()
 	ReadingMessage *messages = new ReadingMessage[num_messages];
 	ReadingGroupMessage group_message = ReadingGroupMessage_init_zero;
 
-	Serial.print("setup:: sizeof(buffer): ");
+	Serial.print(F("setup:: sizeof(buffer): "));
 	Serial.println(sizeof(buffer));
-	Serial.print("setup:: sizeof(message_length): ");
+	Serial.print(F("setup:: sizeof(message_length): "));
 	Serial.println(sizeof(message_length));
 
     for(int i = 0; i < num_messages; i++) {
         data.BuildReading(messages[i], 1 * (i+1), 1.0 * (i+1), 60 * (i+1), 1.1 * (i+1), 1.2 * (i+1), 2 * (i+1), 3 * (i+1));
-        Serial.println("setup::");
+        Serial.println(F("setup::"));
         data.PrintReading(messages[i]);
     }
 
 	data.BuildReadingGroup(group_message, messages, num_messages);
 
     // free up some heap; we don't need messages anymore
+    printFreeRam();
 	delete [] messages;
+	printFreeRam();
 
 	data.SerializeReadingGroup(buffer, buffer_length, message_length, group_message);
 	data.DeserializeReadingGroup(group_message, message_length, buffer);
+	delay(1); // reset WDT
 
 	message_length_buffer[0] = (message_length >> 24) & 0xFF;
     message_length_buffer[1] = (message_length >> 16) & 0xFF;
@@ -152,16 +166,53 @@ void setup ()
 	                 (size_t)message_length_buffer[2] << 8 |
 	                 (size_t)message_length_buffer[1] << 16 |
 	                 (size_t)message_length_buffer[0] << 24;
-	Serial.print("setup:: message_length: ");
+	Serial.print(F("setup:: message_length: "));
 	Serial.println(message_length);
 	data.Read(f, buffer, message_length);
 	f.close();
 
     data.DeserializeReadingGroup(group_message, message_length, buffer);
 
-	Serial.println("Done!\n");
+	Serial.println(F("Done!\n"));
 
-	Serial.println("- - - - - - - - - -\n\n");
+	// Test HTTP POST
+	Serial.println(F("Initializing HTTP POST..."));
+
+    if(!connected) {
+        ESP.eraseConfig();
+
+        while(!connected) {
+            connected = ota.Connect("DLab", "endmill1");
+        }
+    }
+
+	if(connected) {
+	    delay(1);
+        HTTPClient http;
+        http.begin("192.168.7.55", 8000, "/api/v1/readings/");
+        http.addHeader("Content-Type", "text/plain");
+        //char message_length_string[10];
+        //itoa(message_length, message_length_string, 10);
+        //Serial.print(F("setup:: Message Length String: "));
+        //Serial.println(message_length_string);
+        //http.addHeader("Content-Length", message_length_string);
+        //http.addHeader("Content-Length", "378");
+        Serial.print(F("setup:: sizeof(buffer): "));
+	    Serial.println(sizeof(buffer));
+	    Serial.print(F("setup:: buffer: "));
+	    for (int i = 0; i < message_length; i++) {
+            if (i > 0) Serial.print(":");
+            Serial.printf("%02X", buffer[i]);
+        }
+        http.POST(buffer, message_length);
+        http.writeToStream(&Serial);
+        http.end();
+	}
+	Serial.println(F("Done!\n"));
+
+	printFreeRam();
+
+	Serial.println(F("- - - - - - - - - -\n\n"));
 }
 
 void loop ()
@@ -189,10 +240,10 @@ void loop ()
 	dust.Awake(false);
     */
 
-	Serial.print("VOUT: ");
+	Serial.print(F("VOUT: "));
 	Serial.println(gas.ADC(), 4);
 
 	delay(5 * 1000);
 
-	Serial.println("- - - - - - - - - -");
+	Serial.println(F("- - - - - - - - - -"));
 }
