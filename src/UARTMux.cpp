@@ -28,6 +28,7 @@ void UARTMux::Select(ETarget target)
     // Wait for output buffer to clear
     Serial.flush();
 
+    // Slect appropreate mux circuit from input target
     if (target == ETarget::FTDI)
     {
         digitalWrite(ExtSelectPin_, LOW);

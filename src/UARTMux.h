@@ -7,6 +7,7 @@ public:
     UARTMux(byte ext_select, byte int_select);
     ~UARTMux();
 
+    /// Hard-coded addreses for the UART mux circuit
     enum class ETarget
     {
         FTDI,
