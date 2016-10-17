@@ -3,39 +3,46 @@ Name:       Adjutant.ino
 Author:     Konrad R.K. Ludwig
 */
 
+// Arduino libraries
 #include <Wire.h>
 
-#include "SDS021.h"
-#include "MCP3425.h"
+// 3rd party libraries
 #include "pb_common.h"
 #include "pb_encode.h"
 #include "pb_decode.h"
 #include "pb.h"
 #include "reading.pb.h"
 
-#include "SPEC.h"
-#include "PSTAT.h"
+// Scintilla libraries
+#include "MCP3425.h"
+#include "LMP91000.h"
+#include "SDS021.h"
+
+// Adjutant libraries
 #include "OTA.h"
 #include "data.h"
+#include "SPEC.h"
+#include "PSTAT.h"
 
 // I2C pins
-#define I2CSDA_PIN 2
-#define I2CSCL_PIN 0
+#define SCL 0
+#define SDA 2
 
 // UART circuit controls
-#define SSRX_PIN 14
-#define SSTX_PIN 12
+#define UART_INT 10
+#define UART_EXT 15
 
 // Gas sensor circuit controls
-#define PSTAT0_PIN 4
-#define PSTAT1_PIN 5
-#define PSTAT2_PIN 13
-#define MENB_PIN 16
+#define PSTAT_0 14
+#define PSTAT_1 12
+#define PSTAT_2 13
+#define MENB 16
 
 // Sensors and components
+UARTMux mux = UARTMux(UART_EXT, UART_INT);
 SDS021 dust = SDS021();
-PSTAT gas = PSTAT(PSTAT0_PIN, PSTAT1_PIN, PSTAT2_PIN, MENB_PIN);
 //Components::SKM61 gps = SKM61();
+PSTAT gas = PSTAT(PSTAT_0, PSTAT_1, PSTAT_2, MENB);
 
 // OTA
 OTA ota = OTA();
