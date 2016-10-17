@@ -41,7 +41,7 @@ I2C communications should work out of the box, provided you assign the correct p
 
 setup()
 {
-    # Inititialize I2C bus with explicit pin declarations
+    // Inititialize I2C bus with explicit pin declarations
     Wire.pins(SDA, SCL);
     Wire.begin();
 }
@@ -81,17 +81,17 @@ setup()
 {
     uart.Begin();
 
-    # Select dust sensor
+    // Select dust sensor
     uart.Select(UARTMux::ETarget::SDS021);
-    # ...
+    // ...
 
-    # Select GPS module
+    // Select GPS module
     uart.Select(UARTMux::ETarget::SKM61);
-    # ...
+    // ...
 
-    # Select FTDI chip
+    // Select FTDI chip
     uart.Select(UARTMux::ETarget::FTDI);
-    # ...
+    // ...
 }
 ```
 
@@ -122,22 +122,22 @@ using the `ADC()` method of the `PSTAT` class.
 #include <SPEC.h>
 
 #define MENB 16
-#define PSTAT0 14
-#define PSTAT1 12
-#define PSTAT2 13
+#define PSTAT_0 14
+#define PSTAT_1 12
+#define PSTAT_2 13
 
-# Instantiate PSTAT circuit
-PSTAT pstat = PSTAT(PSTAT0, PSTAT1, PSTAT2, MENB);
+// Instantiate PSTAT circuit
+PSTAT pstat = PSTAT(PSTAT_0, PSTAT_1, PSTAT_2, MENB);
 
 setup()
 {
-    # Initialize PSTAT pins
+    // Initialize PSTAT pins
     pstat.Begin();
 
-    # Configure PSTAT ADC
+    // Configure PSTAT ADC
     pstat.ADC(true, MCP3425::EResolution::d16Bit, MCP3425::EGain::x8);
 
-    # Configure SPEC gas sensors
+    // Configure SPEC gas sensors
     pstat.Configure(0, SPEC::CO);
     pstat.Configure(1, SPEC::O3);
     pstat.Configure(2, SPEC::SO2);
@@ -150,12 +150,12 @@ loop()
     double v_out;
     for (int i = 0; i < 5; i++)
     {
-        # Select the gas sensor and measure the output voltage
+        // Select the gas sensor and measure the output voltage
         pstat.Select(i);
         v_out = pstat.ADC();
 
-        # Do something with the data
-        # ...
+        // Do something with the data
+        // ...
     }
 }
 ```
